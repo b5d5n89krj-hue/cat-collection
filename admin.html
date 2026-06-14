@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐾 校园动物图鉴 - 后台管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* 登录页面 */
+        .login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .login-box .logo {
+            text-align: center;
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-error {
+            color: #ff4757;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* 后台主页面 */
+        .admin-page {
+            display: none;
+        }
+
+        .navbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-logout {
+            padding: 8px 20px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-logout:hover {
+            background: #ff6b81;
+        }
+
+        .btn-view-site {
+            padding: 8px 20px;
+            background: #2ed573;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+        }
+
+        .btn-add {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+        }
+
+        /* 动物列表 */
+        .animal-list {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .animal-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+        }
+
+        .animal-item:hover {
+            background: #f8f9fa;
+        }
+
+        .animal-item:last-child {
+            border-bottom: none;
+        }
+
+        .animal-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin-right: 20px;
+        }
+
+        .animal-info {
+            flex: 1;
+        }
+
+        .animal-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .animal-meta {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .animal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-edit {
+            padding: 8px 16px;
+            background: #ffa502;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-delete {
+            padding: 8px 16px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h3 {
+            font-size: 22px;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .btn-close:hover {
+            color: #333;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-save {
+            flex: 1;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 14px;
+            background: #eee;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .animal-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .animal-image {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .animal-actions {
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div class="login-page" id="loginPage">
+        <div class="login-box">
+            <div class="logo">🐾</div>
+            <h1>后台管理系统</h1>
+            <form onsubmit="return login(event)">
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入管理密码" required>
+                </div>
+                <button type="submit" class="btn-login">登录</button>
+                <p class="login-error" id="loginError">密码错误，请重试</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 后台主页面 -->
+    <div class="admin-page" id="adminPage">
+        <nav class="navbar">
+            <h1>🐾 校园动物图鉴 - 后台管理</h1>
+            <div class="nav-right">
+                <a href="index.html" class="btn-view-site" target="_blank">查看网站</a>
+                <button class="btn-logout" onclick="logout()">退出登录</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- 统计卡片 -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="number" id="statAnimals">0</div>
+                    <div class="label">收录动物</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="statLocations">0</div>
+                    <div class="label">活动地点</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="statLikes">0</div>
+                    <div class="label">总点赞数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="statComments">0</div>
+                    <div class="label">评论数</div>
+                </div>
+            </div>
+
+            <!-- 头部 -->
+            <div class="header">
+                <h2>动物列表</h2>
+                <button class="btn-add" onclick="openAddModal()">+ 添加动物</button>
+            </div>
+
+            <!-- 动物列表 -->
+            <div class="animal-list" id="animalList">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">添加动物</h3>
+                <button class="btn-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="return saveAnimal(event)">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label>名字 *</label>
+                    <input type="text" id="editName" required placeholder="动物名字">
+                </div>
+                <div class="form-group">
+                    <label>性别</label>
+                    <select id="editGender">
+                        <option value="♂">♂ 公</option>
+                        <option value="♀">♀ 母</option>
+                        <option value="未知">未知</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>常出没地点 *</label>
+                    <input type="text" id="editLocation" required placeholder="如：图书馆门口">
+                </div>
+                <div class="form-group">
+                    <label>性格特点</label>
+                    <input type="text" id="editPersonality" placeholder="如：亲人、高冷">
+                </div>
+                <div class="form-group">
+                    <label>健康状态</label>
+                    <select id="editHealth">
+                        <option value="健康">健康</option>
+                        <option value="待检查">待检查</option>
+                        <option value="治疗中">治疗中</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>发现时间</label>
+                    <input type="date" id="editDate">
+                </div>
+                <div class="form-group">
+                    <label>照片链接</label>
+                    <input type="text" id="editImage" placeholder="输入图片URL">
+                </div>
+                <div class="form-group">
+                    <label>动物故事</label>
+                    <textarea id="editStory" placeholder="分享这只动物的故事"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn-save">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <h3 style="margin-bottom: 15px;">确认删除</h3>
+            <p style="margin-bottom: 25px; color: #666;">确定要删除这只动物吗？此操作不可恢复。</p>
+            <input type="hidden" id="deleteId">
+            <div class="form-actions">
+                <button class="btn-cancel" onclick="closeDeleteModal()">取消</button>
+                <button class="btn-save" style="background: #ff4757;" onclick="confirmDelete()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase 配置
+        const SUPABASE_URL = 'https://hcyzgyrwmdvvfqtpncky.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_d3_gbtaKy8WWxYrAMpJuRg_TIvSa7Rj';
+
+        // 管理密码（可以修改）
+        const ADMIN_PASSWORD = 'admin123';
+
+        // 检查登录状态
+        function checkLogin() {
+            const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+            if (isLoggedIn === 'true') {
+                showAdminPage();
+            }
+        }
+
+        // 登录
+        function login(e) {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+
+            if (password === ADMIN_PASSWORD) {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                showAdminPage();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+            return false;
+        }
+
+        // 显示后台页面
+        function showAdminPage() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('adminPage').style.display = 'block';
+            loadAnimals();
+            loadStats();
+        }
+
+        // 退出登录
+        function logout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('adminPage').style.display = 'none';
+        }
+
+        // 加载动物列表
+        async function loadAnimals() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/animals?order=id`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                const animals = await response.json();
+                renderAnimalList(animals);
+            } catch (error) {
+                console.error('加载动物列表失败:', error);
+            }
+        }
+
+        // 渲染动物列表
+        function renderAnimalList(animals) {
+            const container = document.getElementById('animalList');
+
+            if (animals.length === 0) {
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;">暂无动物数据</div>';
+                return;
+            }
+
+            container.innerHTML = animals.map(animal => `
+                <div class="animal-item">
+                    <img class="animal-image" src="${animal.image || 'https://placekitten.com/80/80'}" alt="${animal.name}">
+                    <div class="animal-info">
+                        <div class="animal-name">${animal.name} ${animal.gender || ''}</div>
+                        <div class="animal-meta">📍 ${animal.location || '未知'} | 🏥 ${animal.health || '健康'} | 📅 ${animal.date || '未知'}</div>
+                    </div>
+                    <div class="animal-actions">
+                        <button class="btn-edit" onclick="openEditModal(${animal.id})">编辑</button>
+                        <button class="btn-delete" onclick="openDeleteModal(${animal.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                // 动物数量
+                const animalsRes = await fetch(`${SUPABASE_URL}/rest/v1/animals?select=id`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const animals = await animalsRes.json();
+                document.getElementById('statAnimals').textContent = animals.length;
+
+                // 地点数量
+                const locationsRes = await fetch(`${SUPABASE_URL}/rest/v1/animals?select=location`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const locationsData = await locationsRes.json();
+                const locations = new Set(locationsData.map(a => a.location).filter(Boolean));
+                document.getElementById('statLocations').textContent = locations.size;
+
+                // 点赞数
+                const likesRes = await fetch(`${SUPABASE_URL}/rest/v1/likes?select=likes`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const likesData = await likesRes.json();
+                const totalLikes = likesData.reduce((sum, item) => sum + (item.likes || 0), 0);
+                document.getElementById('statLikes').textContent = totalLikes;
+
+                // 评论数
+                const commentsRes = await fetch(`${SUPABASE_URL}/rest/v1/comments?select=id`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const comments = await commentsRes.json();
+                document.getElementById('statComments').textContent = comments.length;
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 打开添加弹窗
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '添加动物';
+            document.getElementById('editId').value = '';
+            document.getElementById('editName').value = '';
+            document.getElementById('editGender').value = '♂';
+            document.getElementById('editLocation').value = '';
+            document.getElementById('editPersonality').value = '';
+            document.getElementById('editHealth').value = '健康';
+            document.getElementById('editDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('editImage').value = '';
+            document.getElementById('editStory').value = '';
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        // 打开编辑弹窗
+        async function openEditModal(id) {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/animals?id=eq.${id}`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                const data = await response.json();
+                if (data.length > 0) {
+                    const animal = data[0];
+                    document.getElementById('modalTitle').textContent = '编辑动物';
+                    document.getElementById('editId').value = animal.id;
+                    document.getElementById('editName').value = animal.name || '';
+                    document.getElementById('editGender').value = animal.gender || '♂';
+                    document.getElementById('editLocation').value = animal.location || '';
+                    document.getElementById('editPersonality').value = animal.personality || '';
+                    document.getElementById('editHealth').value = animal.health || '健康';
+                    document.getElementById('editDate').value = animal.date || '';
+                    document.getElementById('editImage').value = animal.image || '';
+                    document.getElementById('editStory').value = animal.story || '';
+                    document.getElementById('editModal').classList.add('active');
+                }
+            } catch (error) {
+                console.error('获取动物信息失败:', error);
+            }
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        // 保存动物
+        async function saveAnimal(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editId').value;
+            const data = {
+                name: document.getElementById('editName').value,
+                gender: document.getElementById('editGender').value,
+                location: document.getElementById('editLocation').value,
+                personality: document.getElementById('editPersonality').value,
+                health: document.getElementById('editHealth').value,
+                status: [document.getElementById('editHealth').value],
+                date: document.getElementById('editDate').value,
+                image: document.getElementById('editImage').value || 'https://placekitten.com/400/300',
+                story: document.getElementById('editStory').value
+            };
+
+            try {
+                let response;
+                if (id) {
+                    // 编辑
+                    response = await fetch(`${SUPABASE_URL}/rest/v1/animals?id=eq.${id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // 添加
+                    response = await fetch(`${SUPABASE_URL}/rest/v1/animals`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    // 同时添加点赞记录
+                    if (response.ok) {
+                        const animalsRes = await fetch(`${SUPABASE_URL}/rest/v1/animals?order=id.desc&limit=1`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        const newAnimal = await animalsRes.json();
+                        if (newAnimal.length > 0) {
+                            await fetch(`${SUPABASE_URL}/rest/v1/likes`, {
+                                method: 'POST',
+                                headers: {
+                                    'apikey': SUPABASE_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'return=minimal'
+                                },
+                                body: JSON.stringify({ cat_id: newAnimal[0].id, likes: 0 })
+                            });
+                        }
+                    }
+                }
+
+                if (response.ok) {
+                    closeModal();
+                    loadAnimals();
+                    loadStats();
+                    alert(id ? '修改成功！' : '添加成功！');
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败，请重试');
+            }
+
+            return false;
+        }
+
+        // 打开删除确认弹窗
+        function openDeleteModal(id) {
+            document.getElementById('deleteId').value = id;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        // 关闭删除确认弹窗
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        // 确认删除
+        async function confirmDelete() {
+            const id = document.getElementById('deleteId').value;
+
+            try {
+                // 删除动物
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/animals?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('删除动物失败');
+                }
+
+                // 删除相关点赞
+                await fetch(`${SUPABASE_URL}/rest/v1/likes?cat_id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                // 删除相关评论
+                await fetch(`${SUPABASE_URL}/rest/v1/comments?cat_id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                closeDeleteModal();
+                loadAnimals();
+                loadStats();
+                alert('删除成功！');
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请重试');
+            }
+        }
+
+        // 初始化
+        checkLogin();
+    </script>
+</body>
+</html>
