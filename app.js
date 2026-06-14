@@ -2,12 +2,11 @@
 const SUPABASE_URL = 'https://hcyzgyrwmdvvfqtpncky.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_d3_gbtaKy8WWxYrAMpJuRg_TIvSa7Rj';
 
-// 猫咪数据
+// 动物数据
 const catsData = [
     {
         id: 1,
         name: "大橘",
-        color: "橘猫",
         gender: "♂",
         location: "图书馆门口",
         personality: "亲人、贪吃、慵懒",
@@ -21,7 +20,6 @@ const catsData = [
     {
         id: 2,
         name: "小黑",
-        color: "黑猫",
         gender: "♀",
         location: "三食堂",
         personality: "高冷、独立、优雅",
@@ -35,7 +33,6 @@ const catsData = [
     {
         id: 3,
         name: "奶糖",
-        color: "白猫",
         gender: "♂",
         location: "女生宿舍楼下",
         personality: "粘人、爱叫、撒娇",
@@ -49,7 +46,6 @@ const catsData = [
     {
         id: 4,
         name: "阿狸",
-        color: "狸花",
         gender: "♀",
         location: "操场看台",
         personality: "活泼、好奇、敏捷",
@@ -63,7 +59,6 @@ const catsData = [
     {
         id: 5,
         name: "布丁",
-        color: "橘猫",
         gender: "♂",
         location: "二食堂",
         personality: "温顺、老实、憨厚",
@@ -77,7 +72,6 @@ const catsData = [
     {
         id: 6,
         name: "花花",
-        color: "三花",
         gender: "♀",
         location: "花园长廊",
         personality: "安静、优雅、怕生",
@@ -91,7 +85,6 @@ const catsData = [
     {
         id: 7,
         name: "警长",
-        color: "奶牛",
         gender: "♂",
         location: "校门口",
         personality: "勇敢、忠诚、护院",
@@ -105,7 +98,6 @@ const catsData = [
     {
         id: 8,
         name: "团子",
-        color: "白猫",
         gender: "♀",
         location: "教学楼",
         personality: "聪明、爱学习、安静",
@@ -119,8 +111,9 @@ const catsData = [
 ];
 
 // 全局变量
-let currentFilter = { color: 'all', location: 'all', status: 'all' };
+let currentFilter = { location: 'all', status: 'all' };
 let currentCat = null;
+let totalCommentsCount = 0;
 
 // 从Supabase加载点赞数据
 async function loadLikesData() {
@@ -176,15 +169,124 @@ function markLiked(catId) {
     }
 }
 
+// 加载评论数据
+async function loadComments(catId) {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/comments?cat_id=eq.${catId}&order=created_at.desc`, {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('加载评论失败:', error);
+        return [];
+    }
+}
+
+// 添加评论
+async function addComment() {
+    const input = document.getElementById('commentInput');
+    const content = input.value.trim();
+
+    if (!content) {
+        alert('请输入评论内容');
+        return;
+    }
+
+    if (!currentCat) return;
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/comments`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({
+                cat_id: currentCat.id,
+                content: content
+            })
+        });
+
+        if (response.ok) {
+            input.value = '';
+            // 重新加载评论
+            const comments = await loadComments(currentCat.id);
+            renderComments(comments);
+            totalCommentsCount++;
+            updateStats();
+        }
+    } catch (error) {
+        console.error('添加评论失败:', error);
+        alert('评论失败，请稍后重试');
+    }
+}
+
+// 渲染评论
+function renderComments(comments) {
+    const container = document.getElementById('commentsList');
+
+    if (comments.length === 0) {
+        container.innerHTML = '<div class="no-comments">暂无评论，快来抢沙发吧~</div>';
+        return;
+    }
+
+    container.innerHTML = comments.map(comment => {
+        const date = new Date(comment.created_at);
+        const timeStr = date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return `
+            <div class="comment-item">
+                <div class="comment-content">${escapeHtml(comment.content)}</div>
+                <div class="comment-time">📅 ${timeStr}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 加载总评论数
+async function loadTotalComments() {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/comments?select=id`, {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+        const data = await response.json();
+        totalCommentsCount = data.length;
+    } catch (error) {
+        console.error('加载评论数失败:', error);
+    }
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadLikesData();
+    await Promise.all([loadLikesData(), loadTotalComments()]);
     renderCats();
     setupFilters();
     updateStats();
 });
 
-// 渲染猫咪卡片
+// 渲染动物卡片
 function renderCats(filteredCats = null) {
     const grid = document.getElementById('catGrid');
     const cats = filteredCats || getFilteredCats();
@@ -193,7 +295,7 @@ function renderCats(filteredCats = null) {
         grid.innerHTML = `
             <div class="empty-state">
                 <div class="emoji">😿</div>
-                <h3>没有找到匹配的猫咪</h3>
+                <h3>没有找到匹配的动物</h3>
                 <p>试试其他筛选条件吧</p>
             </div>
         `;
@@ -204,7 +306,6 @@ function renderCats(filteredCats = null) {
         <div class="cat-card" onclick="openCatModal(${cat.id})">
             <div class="card-image">
                 <img src="${cat.image}" alt="${cat.name}" loading="lazy">
-                <span class="card-badge">${cat.color}</span>
             </div>
             <div class="card-content">
                 <div class="card-name">
@@ -219,7 +320,6 @@ function renderCats(filteredCats = null) {
                     ${cat.status.map(s => {
                         let cls = '';
                         if (s === '健康') cls = 'green';
-                        else if (s === '待领养') cls = 'blue';
                         return `<span class="card-tag ${cls}">${s}</span>`;
                     }).join('')}
                 </div>
@@ -229,13 +329,12 @@ function renderCats(filteredCats = null) {
     `).join('');
 }
 
-// 获取过滤后的猫咪
+// 获取过滤后的动物
 function getFilteredCats() {
     return catsData.filter(cat => {
-        const colorMatch = currentFilter.color === 'all' || cat.color === currentFilter.color;
         const locationMatch = currentFilter.location === 'all' || cat.location.includes(currentFilter.location);
         const statusMatch = currentFilter.status === 'all' || cat.status.includes(currentFilter.status);
-        return colorMatch && locationMatch && statusMatch;
+        return locationMatch && statusMatch;
     });
 }
 
@@ -246,16 +345,13 @@ function setupFilters() {
             const filterType = tag.dataset.filter;
             const value = tag.dataset.value;
 
-            // 更新当前筛选
             currentFilter[filterType] = value;
 
-            // 更新按钮状态
             document.querySelectorAll(`.filter-tag[data-filter="${filterType}"]`).forEach(t => {
                 t.classList.remove('active');
             });
             tag.classList.add('active');
 
-            // 重新渲染
             renderCats();
         });
     });
@@ -272,7 +368,6 @@ function searchCats() {
 
     const filtered = catsData.filter(cat =>
         cat.name.toLowerCase().includes(searchTerm) ||
-        cat.color.includes(searchTerm) ||
         cat.location.includes(searchTerm) ||
         cat.personality.includes(searchTerm)
     );
@@ -287,15 +382,14 @@ document.getElementById('searchInput')?.addEventListener('keypress', (e) => {
     }
 });
 
-// 打开猫咪详情弹窗
-function openCatModal(catId) {
+// 打开动物详情弹窗
+async function openCatModal(catId) {
     currentCat = catsData.find(c => c.id === catId);
     if (!currentCat) return;
 
     document.getElementById('modalImage').src = currentCat.image;
     document.getElementById('modalName').textContent = currentCat.name;
     document.getElementById('modalLocation').textContent = currentCat.location;
-    document.getElementById('modalColor').textContent = currentCat.color;
     document.getElementById('modalPersonality').textContent = currentCat.personality;
     document.getElementById('modalDate').textContent = currentCat.date;
     document.getElementById('modalHealth').textContent = currentCat.health;
@@ -318,6 +412,10 @@ function openCatModal(catId) {
 
     document.getElementById('catModal').classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // 加载评论
+    const comments = await loadComments(catId);
+    renderComments(comments);
 }
 
 // 关闭弹窗
@@ -353,22 +451,20 @@ async function likeCat() {
     updateStats();
 }
 
-
 // 更新统计数据
-function updateStats() {
+async function updateStats() {
     const totalCats = document.getElementById('totalCats');
     const totalLocations = document.getElementById('totalLocations');
     const totalLikes = document.getElementById('totalLikes');
-    const totalAdopted = document.getElementById('totalAdopted');
+    const totalComments = document.getElementById('totalComments');
 
     const locations = new Set(catsData.map(c => c.location));
     const totalLikesCount = catsData.reduce((sum, c) => sum + c.likes, 0);
-    const checkCount = catsData.filter(c => c.status.includes('待检查')).length;
 
     animateNumber(totalCats, catsData.length);
     animateNumber(totalLocations, locations.size);
     animateNumber(totalLikes, totalLikesCount);
-    animateNumber(totalAdopted, checkCount);
+    animateNumber(totalComments, totalCommentsCount);
 }
 
 // 数字动画
