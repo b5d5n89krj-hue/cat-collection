@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐱 校园猫咪图鉴</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">🐱</span>
+            <h1>校园猫咪图鉴</h1>
+        </div>
+        <div class="nav-links">
+            <a href="#home" class="active">首页</a>
+            <a href="#about">关于我们</a>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>发现校园里的小可爱</h2>
+            <p>记录每一只猫咪的故事，让它们被更多人认识和关爱</p>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索猫咪名字、花色、地点...">
+                <button onclick="searchCats()">🔍</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 筛选标签 -->
+    <section class="filters">
+        <div class="filter-group">
+            <span class="filter-label">花色：</span>
+            <button class="filter-tag active" data-filter="color" data-value="all">全部</button>
+            <button class="filter-tag" data-filter="color" data-value="橘猫">橘猫</button>
+            <button class="filter-tag" data-filter="color" data-value="黑猫">黑猫</button>
+            <button class="filter-tag" data-filter="color" data-value="白猫">白猫</button>
+            <button class="filter-tag" data-filter="color" data-value="狸花">狸花</button>
+            <button class="filter-tag" data-filter="color" data-value="三花">三花</button>
+            <button class="filter-tag" data-filter="color" data-value="奶牛">奶牛</button>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">地点：</span>
+            <button class="filter-tag active" data-filter="location" data-value="all">全部</button>
+            <button class="filter-tag" data-filter="location" data-value="图书馆">图书馆</button>
+            <button class="filter-tag" data-filter="location" data-value="食堂">食堂</button>
+            <button class="filter-tag" data-filter="location" data-value="宿舍">宿舍</button>
+            <button class="filter-tag" data-filter="location" data-value="操场">操场</button>
+            <button class="filter-tag" data-filter="location" data-value="花园">花园</button>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">状态：</span>
+            <button class="filter-tag active" data-filter="status" data-value="all">全部</button>
+            <button class="filter-tag" data-filter="status" data-value="健康">健康</button>
+            <button class="filter-tag" data-filter="status" data-value="待检查">待检查</button>
+        </div>
+    </section>
+
+    <!-- 猫咪卡片展示区 -->
+    <section class="cat-grid" id="catGrid">
+        <!-- 动态生成 -->
+    </section>
+
+    <!-- 猫咪详情弹窗 -->
+    <div class="modal" id="catModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-body">
+                <div class="modal-image">
+                    <img id="modalImage" src="" alt="">
+                </div>
+                <div class="modal-info">
+                    <h2 id="modalName"></h2>
+                    <div class="info-tags" id="modalTags"></div>
+                    <div class="info-details">
+                        <p><strong>📍 常出没：</strong><span id="modalLocation"></span></p>
+                        <p><strong>🎨 花色：</strong><span id="modalColor"></span></p>
+                        <p><strong>😊 性格：</strong><span id="modalPersonality"></span></p>
+                        <p><strong>📅 发现时间：</strong><span id="modalDate"></span></p>
+                        <p><strong>🏥 健康状态：</strong><span id="modalHealth"></span></p>
+                    </div>
+                    <div class="info-story">
+                        <h3>📖 猫咪故事</h3>
+                        <p id="modalStory"></p>
+                    </div>
+                    <div class="modal-actions">
+                        <span class="likes-display">❤️ <span id="modalLikes">0</span> 人喜欢</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计区域 -->
+    <section class="stats">
+        <div class="stat-item">
+            <span class="stat-number" id="totalCats">0</span>
+            <span class="stat-label">收录猫咪</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number" id="totalLocations">0</span>
+            <span class="stat-label">活动地点</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number" id="totalLikes">0</span>
+            <span class="stat-label">被喜欢</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number" id="totalAdopted">0</span>
+            <span class="stat-label">待关注</span>
+        </div>
+    </section>
+
+    <!-- 关于我们 -->
+    <section class="about" id="about">
+        <h2>关于我们</h2>
+        <p>校园猫咪图鉴是由学生们自发创建的公益项目，旨在记录校园内每一只流浪猫的信息，让更多人了解和关爱这些小生命。我们致力于：</p>
+        <div class="about-features">
+            <div class="feature">
+                <span class="feature-icon">📸</span>
+                <h3>记录信息</h3>
+                <p>为每只猫咪建立档案</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🏥</span>
+                <h3>健康关怀</h3>
+                <p>关注猫咪健康状态</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🏠</span>
+                <h3>领养服务</h3>
+                <p>帮助猫咪找到温暖的家</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>🐱 校园猫咪图鉴 © 2026 | 让每一只猫咪都被看见</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
