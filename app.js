@@ -118,8 +118,46 @@ const catsData = [
 let currentFilter = { color: 'all', location: 'all', status: 'all' };
 let currentCat = null;
 
+// 从localStorage加载点赞数据
+function loadLikesData() {
+    const saved = localStorage.getItem('catLikes');
+    if (saved) {
+        const likesData = JSON.parse(saved);
+        catsData.forEach(cat => {
+            if (likesData[cat.id] !== undefined) {
+                cat.likes = likesData[cat.id];
+            }
+        });
+    }
+}
+
+// 保存点赞数据到localStorage
+function saveLikesData() {
+    const likesData = {};
+    catsData.forEach(cat => {
+        likesData[cat.id] = cat.likes;
+    });
+    localStorage.setItem('catLikes', JSON.stringify(likesData));
+}
+
+// 检查用户是否已点赞
+function hasLiked(catId) {
+    const liked = localStorage.getItem('likedCats') || '[]';
+    return JSON.parse(liked).includes(catId);
+}
+
+// 标记用户已点赞
+function markLiked(catId) {
+    const liked = JSON.parse(localStorage.getItem('likedCats') || '[]');
+    if (!liked.includes(catId)) {
+        liked.push(catId);
+        localStorage.setItem('likedCats', JSON.stringify(liked));
+    }
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
+    loadLikesData();
     renderCats();
     setupFilters();
     updateStats();
@@ -243,6 +281,14 @@ function openCatModal(catId) {
     document.getElementById('modalStory').textContent = currentCat.story;
     document.getElementById('modalLikes').textContent = currentCat.likes;
 
+    // 设置点赞按钮状态
+    const likeBtn = document.querySelector('.btn-like');
+    if (hasLiked(catId)) {
+        likeBtn.classList.add('liked');
+    } else {
+        likeBtn.classList.remove('liked');
+    }
+
     // 设置标签
     const tagsContainer = document.getElementById('modalTags');
     tagsContainer.innerHTML = currentCat.status.map(s =>
@@ -257,6 +303,33 @@ function openCatModal(catId) {
 function closeModal() {
     document.getElementById('catModal').classList.remove('active');
     document.body.style.overflow = '';
+}
+
+// 点赞功能
+function likeCat() {
+    if (!currentCat) return;
+
+    if (hasLiked(currentCat.id)) {
+        // 取消点赞
+        currentCat.likes--;
+        const liked = JSON.parse(localStorage.getItem('likedCats') || '[]');
+        const index = liked.indexOf(currentCat.id);
+        if (index > -1) {
+            liked.splice(index, 1);
+            localStorage.setItem('likedCats', JSON.stringify(liked));
+        }
+        document.querySelector('.btn-like').classList.remove('liked');
+    } else {
+        // 点赞
+        currentCat.likes++;
+        markLiked(currentCat.id);
+        document.querySelector('.btn-like').classList.add('liked');
+    }
+
+    document.getElementById('modalLikes').textContent = currentCat.likes;
+    saveLikesData();
+    renderCats();
+    updateStats();
 }
 
 

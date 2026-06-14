@@ -514,16 +514,38 @@ body {
     transform: scale(1.02);
 }
 
-.likes-display {
+.modal-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
+    gap: 15px;
+}
+
+.btn-like {
+    padding: 12px 24px;
     background: linear-gradient(135deg, #FFF5F5, #FFE5E5);
+    color: var(--primary);
+    border: 2px solid var(--primary);
     border-radius: 12px;
     font-size: 16px;
     font-weight: 600;
-    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-like:hover {
+    background: linear-gradient(135deg, var(--primary), #FF8E8E);
+    color: white;
+    transform: scale(1.05);
+}
+
+.btn-like.liked {
+    background: linear-gradient(135deg, var(--primary), #FF8E8E);
+    color: white;
+}
+
+.likes-count {
+    font-size: 15px;
+    color: var(--text-light);
 }
 
 /* 添加猫咪表单 */
