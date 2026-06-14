@@ -9,6 +9,7 @@ let catsData = [];
 let currentFilter = { location: 'all', status: 'all' };
 let currentCat = null;
 let totalCommentsCount = 0;
+let totalVisitsCount = 0;
 
 // 从Supabase加载动物数据
 async function loadAnimalsData() {
@@ -185,9 +186,41 @@ async function loadTotalComments() {
     }
 }
 
+// 加载并更新访问次数
+async function loadAndUpdateVisits() {
+    try {
+        // 获取当前访问次数
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/visits?select=count&id=eq.1`, {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+        const data = await response.json();
+
+        if (data.length > 0) {
+            totalVisitsCount = data[0].count + 1;
+
+            // 更新访问次数
+            await fetch(`${SUPABASE_URL}/rest/v1/visits?id=eq.1`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ count: totalVisitsCount })
+            });
+        }
+    } catch (error) {
+        console.error('加载访问次数失败:', error);
+    }
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', async () => {
-    await Promise.all([loadAnimalsData(), loadTotalComments()]);
+    await Promise.all([loadAnimalsData(), loadTotalComments(), loadAndUpdateVisits()]);
     renderCats();
     setupFilters();
     updateStats();
@@ -360,18 +393,18 @@ async function likeCat() {
 
 // 更新统计数据
 async function updateStats() {
+    const totalVisits = document.getElementById('totalVisits');
     const totalCats = document.getElementById('totalCats');
     const totalLocations = document.getElementById('totalLocations');
     const totalLikes = document.getElementById('totalLikes');
-    const totalComments = document.getElementById('totalComments');
 
     const locations = new Set(catsData.map(c => c.location));
     const totalLikesCount = catsData.reduce((sum, c) => sum + c.likes, 0);
 
+    animateNumber(totalVisits, totalVisitsCount);
     animateNumber(totalCats, catsData.length);
     animateNumber(totalLocations, locations.size);
     animateNumber(totalLikes, totalLikesCount);
-    animateNumber(totalComments, totalCommentsCount);
 }
 
 // 数字动画
