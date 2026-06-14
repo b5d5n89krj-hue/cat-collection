@@ -1,3 +1,7 @@
+// Supabase 配置
+const SUPABASE_URL = 'https://hcyzgyrwmdvvfqtpncky.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_d3_gbtaKy8WWxYrAMpJuRg_TIvSa7Rj';
+
 // 猫咪数据
 const catsData = [
     {
@@ -118,26 +122,43 @@ const catsData = [
 let currentFilter = { color: 'all', location: 'all', status: 'all' };
 let currentCat = null;
 
-// 从localStorage加载点赞数据
-function loadLikesData() {
-    const saved = localStorage.getItem('catLikes');
-    if (saved) {
-        const likesData = JSON.parse(saved);
-        catsData.forEach(cat => {
-            if (likesData[cat.id] !== undefined) {
-                cat.likes = likesData[cat.id];
+// 从Supabase加载点赞数据
+async function loadLikesData() {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/likes?select=*`, {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
             }
         });
+        const data = await response.json();
+        data.forEach(item => {
+            const cat = catsData.find(c => c.id === item.cat_id);
+            if (cat) {
+                cat.likes = item.likes;
+            }
+        });
+    } catch (error) {
+        console.error('加载点赞数据失败:', error);
     }
 }
 
-// 保存点赞数据到localStorage
-function saveLikesData() {
-    const likesData = {};
-    catsData.forEach(cat => {
-        likesData[cat.id] = cat.likes;
-    });
-    localStorage.setItem('catLikes', JSON.stringify(likesData));
+// 更新Supabase点赞数据
+async function updateSupabaseLikes(catId, likes) {
+    try {
+        await fetch(`${SUPABASE_URL}/rest/v1/likes?cat_id=eq.${catId}`, {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ likes: likes })
+        });
+    } catch (error) {
+        console.error('更新点赞数据失败:', error);
+    }
 }
 
 // 检查用户是否已点赞
@@ -156,8 +177,8 @@ function markLiked(catId) {
 }
 
 // 初始化
-document.addEventListener('DOMContentLoaded', () => {
-    loadLikesData();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadLikesData();
     renderCats();
     setupFilters();
     updateStats();
@@ -306,7 +327,7 @@ function closeModal() {
 }
 
 // 点赞功能
-function likeCat() {
+async function likeCat() {
     if (!currentCat) return;
 
     if (hasLiked(currentCat.id)) {
@@ -327,7 +348,7 @@ function likeCat() {
     }
 
     document.getElementById('modalLikes').textContent = currentCat.likes;
-    saveLikesData();
+    await updateSupabaseLikes(currentCat.id, currentCat.likes);
     renderCats();
     updateStats();
 }
